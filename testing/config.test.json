@@ -9,9 +9,14 @@
   },
   "commute": {
     "walking_minutes": 2,
-    "work_start_time": "21:00",
+    "work_start_time": "22:00",
     "buffer_minutes": 1,
     "check_interval_seconds": 10
+  },
+  "schedule": {
+    "active_days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+    "active_window_start": "00:00",
+    "active_window_end": "23:59"
   },
 "telegram": {
   "bot_token": "8524862508:AAHksR_pSYj9ruchILR4yzL9CLCg3pfHLTQ",

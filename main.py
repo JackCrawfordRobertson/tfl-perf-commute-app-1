@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 
+import os
 import requests
 import json
 import time
 from datetime import datetime, timedelta
 from telegram import Bot
 import asyncio
+from dotenv import load_dotenv
+
+load_dotenv('/home/pi/commute-app/.env')
 
 class CommutePredictor:
     def __init__(self, config_file='config.json'):
         with open(config_file, 'r') as f:
             self.config = json.load(f)
         
-        self.tfl_key = self.config['tfl']['api_key']
+        self.tfl_key = os.getenv('TFL_API_KEY', self.config['tfl'].get('api_key', ''))
         self.station_id = self.config['tfl']['home_station']
         self.line = self.config['tfl']['line']
         self.direction = self.config['tfl']['direction']
@@ -27,9 +31,10 @@ class CommutePredictor:
         
         # Telegram setup (optional)
         try:
-            self.bot = Bot(token=self.config['telegram']['bot_token'])
-            self.chat_id = self.config['telegram']['chat_id']
-            self.telegram_enabled = True
+            bot_token = os.getenv('TELEGRAM_BOT_TOKEN', self.config.get('telegram', {}).get('bot_token', ''))
+            self.chat_id = os.getenv('TELEGRAM_CHAT_ID', self.config.get('telegram', {}).get('chat_id', ''))
+            self.bot = Bot(token=bot_token)
+            self.telegram_enabled = bool(bot_token and self.chat_id)
         except:
             self.telegram_enabled = False
         

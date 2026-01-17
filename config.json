@@ -1,6 +1,5 @@
 {
   "tfl": {
-    "api_key": "757133d0bd9646cf8e96b4e9377795e5",
     "home_station": "940GZZLUHWY",
     "line": "piccadilly",
     "direction": "inbound",
@@ -13,8 +12,9 @@
     "buffer_minutes": 3,
     "check_interval_seconds": 5
   },
-  "telegram": {
-  "bot_token": "8524862508:AAHksR_pSYj9ruchILR4yzL9CLCg3pfHLTQ",
-  "chat_id": "7260011524"
-}
+  "schedule": {
+    "active_days": ["tuesday", "wednesday"],
+    "active_window_start": "07:45",
+    "active_window_end": "08:30"
+  }
 }
