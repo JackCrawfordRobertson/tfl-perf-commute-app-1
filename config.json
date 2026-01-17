@@ -1,0 +1,20 @@
+{
+  "tfl": {
+    "api_key": "757133d0bd9646cf8e96b4e9377795e5",
+    "home_station": "940GZZLUHWY",
+    "line": "piccadilly",
+    "direction": "inbound",
+    "work_station": "940GZZLUBNK",
+    "journey_time_minutes": 18
+  },
+  "commute": {
+    "walking_minutes": 9,
+    "work_start_time": "08:30",
+    "buffer_minutes": 3,
+    "check_interval_seconds": 5
+  },
+  "telegram": {
+  "bot_token": "8524862508:AAHksR_pSYj9ruchILR4yzL9CLCg3pfHLTQ",
+  "chat_id": "7260011524"
+}
+}
