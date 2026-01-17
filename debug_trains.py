@@ -66,8 +66,3 @@ else:
         print(f"Platform: {platform}")
         print(f"In: {mins} minutes")
         print("-" * 60)
-
-
-
-          git config --global user.email "jack@ya-ya.co.uk"
-  git config --global user.name "JackCrawfordRobertson"
