@@ -8,7 +8,7 @@
     "journey_time_minutes": 15
   },
   "commute": {
-    "walking_minutes": 2,
+    "walking_minutes": 9,
     "work_start_time": "22:00",
     "buffer_minutes": 1,
     "check_interval_seconds": 10
