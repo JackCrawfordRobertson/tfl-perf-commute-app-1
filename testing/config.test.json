@@ -1,6 +1,5 @@
 {
   "tfl": {
-    "api_key": "757133d0bd9646cf8e96b4e9377795e5",
     "home_station": "940GZZLUFPK",
     "line": "victoria",
     "direction": "inbound",
@@ -8,18 +7,13 @@
     "journey_time_minutes": 15
   },
   "commute": {
-    "walking_minutes": 9,
-    "work_start_time": "22:00",
-    "buffer_minutes": 1,
-    "check_interval_seconds": 10
+    "walking_minutes": 5,
+    "arrival_target": "22:00",
+    "platform_buffer_minutes": 2
   },
   "schedule": {
     "active_days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
     "active_window_start": "00:00",
     "active_window_end": "23:59"
-  },
-"telegram": {
-  "bot_token": "8524862508:AAHksR_pSYj9ruchILR4yzL9CLCg3pfHLTQ",
-  "chat_id": "7260011524"
   }
 }

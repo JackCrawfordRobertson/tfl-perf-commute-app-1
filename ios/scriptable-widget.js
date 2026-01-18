@@ -41,9 +41,12 @@ async function createWidget() {
       return widget;
     }
 
+    // Get commute data
+    const commute = data.commute;
+
     // Header with refresh icon
     const headerRow = widget.addStack();
-    const header = headerRow.addText(data.line + " Line");
+    const header = headerRow.addText(data.line);
     header.font = Font.boldSystemFont(14);
     header.textColor = new Color(LINE_COLOR);
     headerRow.addSpacer();
@@ -51,62 +54,50 @@ async function createWidget() {
     refresh.font = Font.systemFont(12);
     refresh.textColor = subtleText;
 
+    widget.addSpacer(4);
+
+    // Main countdown
+    const mins = commute.minutes_until_leave;
+
+    if (commute.should_have_left) {
+      // Should have left already
+      const late = widget.addText("Leave now");
+      late.font = Font.boldSystemFont(20);
+      late.textColor = new Color("#FF9500");
+    } else if (mins <= 15) {
+      // Getting close
+      const countdown = widget.addText(`${mins} min`);
+      countdown.font = Font.boldSystemFont(24);
+      countdown.textColor = mins <= 5 ? new Color("#FF9500") : new Color("#34C759");
+
+      const label = widget.addText("until leave");
+      label.font = Font.systemFont(11);
+      label.textColor = subtleText;
+    } else {
+      // Plenty of time
+      const countdown = widget.addText(`${mins} min`);
+      countdown.font = Font.boldSystemFont(22);
+      countdown.textColor = new Color("#34C759");
+
+      const label = widget.addText("until leave");
+      label.font = Font.systemFont(11);
+      label.textColor = subtleText;
+    }
+
     widget.addSpacer(6);
 
-    if (data.best_train) {
-      const best = data.best_train;
-      const mins = best.countdown_minutes;
-      const secs = best.countdown_seconds % 60;
+    // Schedule info
+    const leaveInfo = widget.addText(`Leave: ${commute.leave_home}`);
+    leaveInfo.font = Font.systemFont(12);
+    leaveInfo.textColor = textColor;
 
-      if (best.countdown_seconds <= 0) {
-        // LEAVE NOW
-        const leaveNow = widget.addText("LEAVE NOW!");
-        leaveNow.font = Font.boldSystemFont(22);
-        leaveNow.textColor = new Color("#ff6b6b");
+    const trainInfo = widget.addText(`Train: ${commute.target_train}`);
+    trainInfo.font = Font.systemFont(12);
+    trainInfo.textColor = textColor;
 
-      } else if (mins <= 10) {
-        // Countdown mode
-        const countdown = widget.addText(`${mins}m ${secs}s`);
-        countdown.font = Font.boldSystemFont(28);
-        countdown.textColor = new Color("#ffd93d");
-
-        const label = widget.addText("until leave");
-        label.font = Font.systemFont(11);
-        label.textColor = subtleText;
-
-      } else {
-        // Plenty of time
-        const countdown = widget.addText(`${mins} min`);
-        countdown.font = Font.boldSystemFont(24);
-        countdown.textColor = new Color("#34C759");
-
-        const label = widget.addText("until leave");
-        label.font = Font.systemFont(11);
-        label.textColor = subtleText;
-      }
-
-      widget.addSpacer(6);
-
-      // Train info
-      const trainInfo = widget.addText(`Train: ${best.train_departs}`);
-      trainInfo.font = Font.systemFont(12);
-      trainInfo.textColor = textColor;
-
-      const arriveInfo = widget.addText(`Arrive: ${best.arrival_at_work}`);
-      arriveInfo.font = Font.systemFont(12);
-      arriveInfo.textColor = textColor;
-
-    } else {
-      const noTrain = widget.addText("No suitable train");
-      noTrain.font = Font.systemFont(14);
-      noTrain.textColor = new Color("#E32017");
-
-      widget.addSpacer(4);
-
-      const late = widget.addText(`All trains arrive after ${data.work_start}`);
-      late.font = Font.systemFont(11);
-      late.textColor = subtleText;
-    }
+    const arriveInfo = widget.addText(`Arrive: ${commute.arrival_target}`);
+    arriveInfo.font = Font.systemFont(12);
+    arriveInfo.textColor = subtleText;
 
   } catch (e) {
     const errorRow = widget.addStack();

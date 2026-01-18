@@ -8,13 +8,12 @@
   },
   "commute": {
     "walking_minutes": 9,
-    "work_start_time": "08:30",
-    "buffer_minutes": 3,
-    "check_interval_seconds": 5
+    "arrival_target": "08:25",
+    "platform_buffer_minutes": 2
   },
   "schedule": {
     "active_days": ["tuesday", "wednesday"],
-    "active_window_start": "07:45",
+    "active_window_start": "07:00",
     "active_window_end": "08:30"
   }
 }

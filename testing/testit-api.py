@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-Simple HTTP API server for commute data.
-Run this alongside main.py to expose data for iPhone Scriptable widget.
+TEST Commute API - always active for testing.
 """
 
+import os
 from flask import Flask, jsonify
 import requests
 import json
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+load_dotenv('/home/pi/commute-app/.env')
 
 app = Flask(__name__)
 
@@ -16,10 +19,11 @@ def load_config():
         return json.load(f)
 
 def get_journey_time(config):
-    """Get journey time from TfL"""
+    """Get journey time from TfL Journey Planner"""
     try:
         url = f"https://api.tfl.gov.uk/Journey/JourneyResults/{config['tfl']['home_station']}/to/{config['tfl']['work_station']}"
-        params = {"app_key": config['tfl']['api_key']}
+        api_key = os.getenv('TFL_API_KEY', config['tfl'].get('api_key', ''))
+        params = {"app_key": api_key}
         response = requests.get(url, params=params, timeout=10)
         data = response.json()
 
@@ -27,36 +31,7 @@ def get_journey_time(config):
             return data['journeys'][0]['duration']
     except:
         pass
-    return config['tfl'].get('journey_time_minutes', 18)
-
-def get_next_trains(config):
-    """Get next trains from TfL API"""
-    url = f"https://api.tfl.gov.uk/StopPoint/{config['tfl']['home_station']}/Arrivals"
-    params = {"app_key": config['tfl']['api_key']}
-
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        arrivals = response.json()
-
-        line = config['tfl']['line']
-        direction = config['tfl']['direction']
-
-        filtered = [a for a in arrivals
-                    if a.get('lineName', '').lower() == line.lower()
-                    and direction in a.get('direction', '').lower()]
-        sorted_trains = sorted(filtered, key=lambda x: x['timeToStation'])
-
-        trains = []
-        for train in sorted_trains[:5]:
-            trains.append({
-                'destination': train['destinationName'].replace(' Underground Station', ''),
-                'platform': train.get('platformName', 'Unknown'),
-                'minutes': train['timeToStation'] // 60,
-                'seconds': train['timeToStation']
-            })
-        return trains
-    except Exception as e:
-        return []
+    return config['tfl'].get('journey_time_minutes', 15)
 
 def is_active_time(config):
     """Check if current time is within active schedule"""
@@ -86,43 +61,53 @@ def is_active_time(config):
 
     return True, "Active"
 
-def calculate_best_train(trains, config, journey_mins):
-    """Find best train and when to leave"""
-    if not trains:
-        return None
+def calculate_target_train(config, journey_mins):
+    """
+    Calculate the ideal train to catch based on arrival target.
+    Returns the train time and when to leave home.
+    """
+    # Get arrival target (e.g., 08:25)
+    arrival_target = config['commute'].get('arrival_target', '08:25')
+    target_h, target_m = map(int, arrival_target.split(':'))
 
-    walking_mins = config['commute']['walking_minutes']
-    buffer = config['commute']['buffer_minutes']
-    work_start = config['commute']['work_start_time']
+    now = datetime.now()
+    target_time = now.replace(hour=target_h, minute=target_m, second=0, microsecond=0)
 
-    work_hour, work_min = map(int, work_start.split(':'))
-    work_time = datetime.now().replace(hour=work_hour, minute=work_min, second=0)
+    # If target already passed today, use tomorrow
+    if now > target_time:
+        target_time += timedelta(days=1)
 
-    if datetime.now() > work_time:
-        work_time += timedelta(days=1)
+    # Work backwards: when must the train depart to arrive by target?
+    ideal_train_departure = target_time - timedelta(minutes=journey_mins)
 
-    for train in trains:
-        train_depart_time = datetime.now() + timedelta(seconds=train['seconds'])
-        arrival_at_work = train_depart_time + timedelta(minutes=journey_mins)
+    # When to leave home to arrive at platform with buffer?
+    walking_mins = config['commute'].get('walking_minutes', 9)
+    platform_buffer = config['commute'].get('platform_buffer_minutes', 2)
 
-        if arrival_at_work <= work_time:
-            leave_home_time = train_depart_time - timedelta(minutes=walking_mins + buffer)
-            time_until_leave = (leave_home_time - datetime.now()).total_seconds()
+    # Leave home time = train_departure - walking_time - platform_buffer
+    leave_home_time = ideal_train_departure - timedelta(minutes=walking_mins + platform_buffer)
 
-            return {
-                'train': train,
-                'train_departs': train_depart_time.strftime('%H:%M'),
-                'leave_time': leave_home_time.strftime('%H:%M'),
-                'countdown_seconds': int(time_until_leave),
-                'countdown_minutes': int(time_until_leave // 60),
-                'arrival_at_work': arrival_at_work.strftime('%H:%M')
-            }
+    # Calculate countdowns
+    seconds_until_leave = (leave_home_time - now).total_seconds()
+    seconds_until_train = (ideal_train_departure - now).total_seconds()
 
-    return None
+    return {
+        'arrival_target': arrival_target,
+        'target_train': ideal_train_departure.strftime('%H:%M'),
+        'leave_home': leave_home_time.strftime('%H:%M'),
+        'walking_mins': walking_mins,
+        'journey_mins': journey_mins,
+        'seconds_until_leave': int(seconds_until_leave),
+        'minutes_until_leave': int(seconds_until_leave // 60),
+        'seconds_until_train': int(seconds_until_train),
+        'minutes_until_train': int(seconds_until_train // 60),
+        'should_have_left': seconds_until_leave <= 0,
+        'train_departed': seconds_until_train <= 0
+    }
 
 @app.route('/')
 def home():
-    return jsonify({"status": "ok", "endpoint": "/status"})
+    return jsonify({"status": "ok", "endpoint": "/status", "mode": "TEST"})
 
 @app.route('/status')
 def status():
@@ -138,20 +123,16 @@ def status():
             'timestamp': datetime.now().isoformat()
         })
 
-    # Get data
+    # Get journey time and calculate target train
     journey_mins = get_journey_time(config)
-    trains = get_next_trains(config)
-    best = calculate_best_train(trains, config, journey_mins)
+    commute = calculate_target_train(config, journey_mins)
 
     response = {
         'active': True,
         'schedule_status': schedule_status,
         'timestamp': datetime.now().isoformat(),
         'line': config['tfl']['line'].title(),
-        'work_start': config['commute']['work_start_time'],
-        'journey_mins': journey_mins,
-        'trains': trains[:3],
-        'best_train': best
+        'commute': commute
     }
 
     return jsonify(response)
