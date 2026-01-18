@@ -1,0 +1,13 @@
+[Unit]
+Description=Commute API Server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/pi/commute-app/api.py
+WorkingDirectory=/home/pi/commute-app
+User=pi
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

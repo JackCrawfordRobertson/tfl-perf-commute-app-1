@@ -139,28 +139,23 @@ Runs on port 5001 with no schedule restrictions.
 
 ## Running on Boot (systemd)
 
-Create `/etc/systemd/system/commute-api.service`:
-
-```ini
-[Unit]
-Description=Commute API Server
-After=network.target
-
-[Service]
-ExecStart=/usr/bin/python3 /home/pi/commute-app/api.py
-WorkingDirectory=/home/pi/commute-app
-User=pi
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start:
+Install the service:
 
 ```bash
+sudo cp /home/pi/commute-app/commute-api.service /etc/systemd/system/
+sudo systemctl daemon-reload
 sudo systemctl enable commute-api
 sudo systemctl start commute-api
+```
+
+### Service Management Commands
+
+```bash
+sudo systemctl status commute-api   # Check if running
+sudo systemctl start commute-api    # Start the service
+sudo systemctl stop commute-api     # Stop the service
+sudo systemctl restart commute-api  # Restart (after code changes)
+journalctl -u commute-api -f        # View live logs
 ```
 
 ## API Servers Summary

@@ -22,21 +22,39 @@ async function createWidget() {
     const data = await req.loadJSON();
 
     if (!data.active) {
-      // Outside commute hours
+      // Outside commute hours - show relaxing message
+      const status = data.schedule_status.toLowerCase();
+      const isWeekend = status.includes("saturday") || status.includes("sunday");
+
       const headerRow = widget.addStack();
-      const title = headerRow.addText("No Commute");
-      title.font = Font.boldSystemFont(16);
-      title.textColor = textColor;
+      headerRow.centerAlignContent();
+
+      if (isWeekend) {
+        const title = headerRow.addText("Day Off 😌");
+        title.font = Font.boldSystemFont(16);
+        title.textColor = textColor;
+      } else {
+        const title = headerRow.addText("No Office 🏠");
+        title.font = Font.boldSystemFont(16);
+        title.textColor = textColor;
+      }
+
       headerRow.addSpacer();
       const refresh = headerRow.addText("↻");
       refresh.font = Font.systemFont(12);
       refresh.textColor = subtleText;
 
-      widget.addSpacer(4);
+      widget.addSpacer(8);
 
-      const status = widget.addText(data.schedule_status);
-      status.font = Font.systemFont(12);
-      status.textColor = subtleText;
+      const chill = widget.addText("Nowhere to be.");
+      chill.font = Font.systemFont(14);
+      chill.textColor = subtleText;
+
+      widget.addSpacer(2);
+
+      const exhale = widget.addText("Exhale.");
+      exhale.font = Font.italicSystemFont(14);
+      exhale.textColor = subtleText;
 
       return widget;
     }
@@ -46,7 +64,7 @@ async function createWidget() {
 
     // Header with refresh icon
     const headerRow = widget.addStack();
-    const header = headerRow.addText(data.line);
+    const header = headerRow.addText("🚇 " + data.line);
     header.font = Font.boldSystemFont(14);
     header.textColor = new Color(LINE_COLOR);
     headerRow.addSpacer();
